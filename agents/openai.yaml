@@ -1,0 +1,4 @@
+interface:
+  display_name: "Shopping List"
+  short_description: "Mobile Hebrew shopping list page by store section, shared by link"
+  default_prompt: "Use $shopping-list to turn this list into a page I can use in the supermarket."
