@@ -77,6 +77,7 @@ document.getElementById("wa").onclick=()=>{
    t.push((v===1?"✅ ":v===2?"❌ ":"⬜ ")+(q?q+" ":"")+name+(note?" ("+note+")":"")+(v===2?" - חסר":""))}
  }
  t.unshift("🛒 רשימת קניות: נקנו "+b+"/"+n+(m?", חסרים "+m:""));
+ if(location.protocol.startsWith("http"))t.push("","🔗 לרשימה המשותפת: "+location.origin+location.pathname);
  location.href="https://wa.me/?text="+encodeURIComponent(t.join("\n"));
 };
 render();api();setInterval(()=>{if(!document.hidden)api()},1000);
