@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Serve a built list and open a temporary public Cloudflare Quick Tunnel to it.
-#   share.sh start <dir> [port=8765] [ttl-seconds=7200]
+# Serve a built list (with shared live state) and open a temporary public Cloudflare Quick Tunnel to it.
+#   share.sh start <dir> [port=8765] [ttl-seconds=0, never closes]
 #   share.sh stop [port=8765]
 # Needs python3 and cloudflared (brew install cloudflared). No Cloudflare account required.
 set -euo pipefail
@@ -21,12 +21,12 @@ case $cmd in
   start)
     dir=${2:?usage: share.sh start <dir> [port] [ttl]}
     port=${3:-8765}
-    ttl=${4:-7200}
+    ttl=${4:-0}
     [[ -f $dir/index.html ]] || { echo "no index.html in $dir" >&2; exit 1; }
     command -v cloudflared >/dev/null || { echo "cloudflared not found (brew install cloudflared)" >&2; exit 1; }
     stop "$port"
     log=$state_dir/$port.log
-    nohup python3 -m http.server "$port" --bind 127.0.0.1 --directory "$dir" >/dev/null 2>&1 &
+    nohup python3 "$(dirname "$0")/server.py" "$dir" "$port" >/dev/null 2>&1 &
     echo $! >"$state_dir/$port.server.pid"
     # --config /dev/null: never inherit ingress rules from ~/.cloudflared/config.yml,
     # which would make every request hit a named tunnel's catch-all 404.
@@ -56,7 +56,7 @@ case $cmd in
     done
     echo "url=$url"
     echo "status=$status"
-    echo "auto_close_in=${ttl}s"
+    [[ $ttl == 0 ]] && echo "auto_close=never" || echo "auto_close_in=${ttl}s"
     ;;
   stop)
     stop "${2:-8765}"

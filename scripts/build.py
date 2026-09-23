@@ -19,4 +19,5 @@ stamp = datetime.datetime.now().strftime("%Y-%m-%d-%H%M")
 html = template.replace("/*DATA*/{}", json.dumps(data, ensure_ascii=False).replace("</", "<\\/")).replace("/*DATE*/", stamp)
 out_dir.mkdir(parents=True, exist_ok=True)
 (out_dir / "index.html").write_text(html, encoding="utf-8")
+(out_dir / "state.json").unlink(missing_ok=True)  # a new list starts with no shared marks
 print(out_dir / "index.html")

@@ -34,6 +34,20 @@ const data=/*DATA*/{};
 const K="shop-/*DATE*/",st=JSON.parse(localStorage.getItem(K)||"{}");
 const list=document.getElementById("list");
 const esc=x=>String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+let ver=-1,pend=0;
+const save=()=>localStorage.setItem(K,JSON.stringify(st));
+function sync(s,post){
+ if(!s||(pend&&!post))return;
+ if(ver===-1&&s.v===0&&Object.keys(st).length){ver=0;return api({seed:st})}
+ if(s.v===ver)return;ver=s.v;
+ for(const k in st)delete st[k];Object.assign(st,s.st);save();render();
+}
+function api(b){
+ if(b)pend++;
+ return fetch("state",b?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}:{cache:"no-store"})
+  .then(r=>r.ok?r.json():null).then(s=>{if(b)pend--;sync(s,!!b)}).catch(()=>{if(b)pend--});
+}
+function setItem(id,v){v?st[id]=v:delete st[id];save();api({id,v})}
 function render(){
  list.innerHTML="";let tot=0,done=0,miss=0;
  for(const[cat,items]of Object.entries(data)){
@@ -45,8 +59,8 @@ function render(){
   for(const r of rows){
    const l=document.createElement("label");if(st[r.id]===1)l.className="done";if(st[r.id]===2)l.className="miss";
    l.innerHTML=`<input type="checkbox"${st[r.id]===1?" checked":""}><span class="q">${esc(r.q)}</span><span>${esc(r.name)}${r.note?` <span class="n">(${esc(r.note)})</span>`:""}</span><button class="m">${st[r.id]===2?"חסר ✕":"חסר"}</button>`;
-   l.querySelector("input").onchange=e=>{e.target.checked?st[r.id]=1:delete st[r.id];localStorage.setItem(K,JSON.stringify(st));setTimeout(render,250)};
-   l.querySelector(".m").onclick=e=>{e.preventDefault();st[r.id]===2?delete st[r.id]:st[r.id]=2;localStorage.setItem(K,JSON.stringify(st));render()};
+   l.querySelector("input").onchange=e=>{setItem(r.id,e.target.checked?1:0);setTimeout(render,250)};
+   l.querySelector(".m").onclick=e=>{e.preventDefault();setItem(r.id,st[r.id]===2?0:2);render()};
    s.appendChild(l);
   }
   list.appendChild(s);
@@ -54,7 +68,7 @@ function render(){
  document.getElementById("count").textContent=`${done}/${tot}`+(miss?` · חסר ${miss}`:"");
  document.getElementById("prog").style.width=(done/tot*100)+"%";
 }
-document.getElementById("reset").onclick=()=>{if(confirm("לאפס את כל הסימונים?")){for(const k in st)delete st[k];localStorage.setItem(K,"{}");render()}};
+document.getElementById("reset").onclick=()=>{if(confirm("לאפס את כל הסימונים?")){for(const k in st)delete st[k];save();render();api({reset:true})}};
 document.getElementById("wa").onclick=()=>{
  let t=[],b=0,n=0,m=0;
  for(const[cat,items]of Object.entries(data)){
@@ -65,7 +79,7 @@ document.getElementById("wa").onclick=()=>{
  t.unshift("🛒 רשימת קניות: נקנו "+b+"/"+n+(m?", חסרים "+m:""));
  location.href="https://wa.me/?text="+encodeURIComponent(t.join("\n"));
 };
-render();
+render();api();setInterval(()=>{if(!document.hidden)api()},1000);
 </script>
 </body>
 </html>

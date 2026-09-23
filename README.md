@@ -12,10 +12,10 @@ A skill for [Claude Code](https://claude.com/claude-code) (it also works in Code
 - ✅ **Tap to mark bought.** A bought item is struck through and moves to the bottom of its section. A progress bar shows how far you are.
 - ❌ **"חסר" button.** Flags an item the store doesn't have.
 - 📤 **WhatsApp export.** Sends the whole list, with each item's status, to any chat.
-- 💾 **Saved on the phone.** Marks survive a refresh or closing the tab.
-- 🔗 **Temporary public link.** Uses a Cloudflare Quick Tunnel, with no account needed. The link closes itself after two hours.
+- 👫 **Live shared list.** Send the link to your partner and both of you see each other's marks within about a second.
+- 🔗 **Phone link.** Uses a Cloudflare Quick Tunnel, with no account needed. The link stays open until you stop it, and you can give it a timer if you like.
 
-It's a single static HTML file with no dependencies, no build step and no server-side state.
+It's one HTML file plus a tiny Python server from the standard library. There are no dependencies and no build step.
 
 ## Install
 
@@ -35,6 +35,7 @@ To run it by hand:
 ```bash
 python3 scripts/build.py examples/list.json /tmp/shopping-list
 scripts/share.sh start /tmp/shopping-list      # prints url=https://....trycloudflare.com
+# optional: scripts/share.sh start /tmp/shopping-list 8765 7200   (closes after 2 hours)
 scripts/share.sh stop
 ```
 
@@ -42,7 +43,7 @@ The list format is `{"category": [[quantity, name, optional note], ...]}`. See [
 
 ## Privacy
 
-Anyone who has the quick-tunnel URL can open the page for as long as the tunnel is running. The page holds only your list. Your ticks stay in your own browser's localStorage and are never sent to a server.
+Anyone who has the quick-tunnel URL can open the page and mark items for as long as the tunnel is running. The page holds only your list. Marks are stored on your own machine in `state.json`, next to the page, and on each phone. The link dies when you run `share.sh stop`, reboot or the machine sleeps.
 
 ## License
 
